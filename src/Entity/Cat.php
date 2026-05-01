@@ -22,7 +22,7 @@ class Cat
 
     #[Assert\NotBlank]
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    private ?\DateTimeImmutable $birthDated = null;
+    private ?\DateTimeImmutable $birthDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'cats')]
     private ?Breed $breed = null;
@@ -47,14 +47,14 @@ class Cat
         return $this;
     }
 
-    public function getBirthDated(): ?\DateTimeImmutable
+    public function getBirthDate(): ?\DateTimeImmutable
     {
-        return $this->birthDated;
+        return $this->birthDate;
     }
 
-    public function setBirthDated(\DateTimeImmutable $birthDated): static
+    public function setBirthDate(\DateTimeImmutable $birthDate): static
     {
-        $this->birthDated = $birthDated;
+        $this->birthDate = $birthDate;
 
         return $this;
     }
