@@ -8,6 +8,7 @@ use App\Dto\CatInput;
 use App\Dto\CatOutput;
 use App\Service\CatService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -17,17 +18,12 @@ final class CatsController extends AbstractController
     #[Route('/api/cats', name: 'api_cats', methods: ['GET'])]
     public function index(CatRepository $catRepository): JsonResponse
     {
-        $cats = $catRepository->findAll();
-
-        $data = array_map(function (Cat $cat) {
-            return [
-                'id' => $cat->getId(),
-                'name' => $cat->getName(),
-                'birthDate' => $cat->getBirthDate()->format('Y-m-d'),
-                'breed' => $cat->getBreed() ? $cat->getBreed()->getName() : null,
-                'owner' => $cat->getOwner() ? $cat->getOwner()->getName() : null,
-            ];
-        }, $cats);
+        //cats = $catRepository->findAll();
+        $cats = $catRepository->findAllWithRelations();
+        $data = array_map(
+            fn(Cat $cat) => CatOutput::fromEntity($cat),
+            $cats
+        );
 
         return $this->json($data);
     }
@@ -43,7 +39,7 @@ final class CatsController extends AbstractController
         // 2. Mapping vers DTO de sortie
         $catOutput = CatOutput::fromEntity($cat);
         // 3. Réponse JSON propre Symfony
-        return $this->json($catOutput, 201);
+        return $this->json($catOutput, Response::HTTP_CREATED);
     }
 
 
@@ -56,12 +52,12 @@ final class CatsController extends AbstractController
     #[Route('/api/cats/{id}', name: 'api_cats_update', methods: ['PUT'])]
     public function update(
         Cat $cat, 
-        #[MapRequestPayload] CatInput $catInput,
+        #[MapRequestPayload(validationGroups: ['update'])] CatInput $catInput,
         CatService $catService
     ): JsonResponse
     {
         $catService->updateFromInput($cat, $catInput);
-        return $this->json(CatOutput::fromEntity($cat));
+        return $this->json(CatOutput::fromEntity($cat), Response::HTTP_OK);
     }
 
     #[Route('/api/cats/{id}', name: 'api_cats_patch', methods: ['PATCH'])]
@@ -71,14 +67,14 @@ final class CatsController extends AbstractController
         CatService $catService
     ): JsonResponse
     {
-        $catService->updateFromInput($cat, $catInput);
-       return $this->json(['status' => 'updated']);
+        $updatedCat = $catService->patchFromInput($cat, $catInput);
+        return $this->json(CatOutput::fromEntity($updatedCat), Response::HTTP_OK);
     }
 
     #[Route('/api/cats/{id}', name: 'api_cats_delete', methods: ['DELETE'])]
     public function delete(Cat $cat, CatService $catService): JsonResponse
     {
         $catService->delete($cat);
-        return $this->json(null, 204);
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

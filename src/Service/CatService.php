@@ -82,6 +82,8 @@ class CatService
             $cat->setOwner($owner);
         }
 
+        $this->entityManager->flush();
+
         return $cat;
     }
 
@@ -109,5 +111,43 @@ class CatService
         // Note: la suppression réelle est gérée par le contrôleur via EntityManager
         $this->entityManager->remove($cat);
         $this->entityManager->flush();
+    }
+
+    public function patchFromInput(Cat $cat, CatInput $catInput): Cat
+    {
+        if ($catInput->name !== null) {
+            $cat->setName($catInput->name);
+        }
+        if ($catInput->birthDate !== null) {
+            $cat->setBirthDate(new \DateTimeImmutable($catInput->birthDate));
+        }
+        if ($catInput->breed !== null) {
+            $breed = $this->breedRepository->find($catInput->breed);
+            if (!$breed) {
+                throw new \DomainException('Breed not found');
+            }
+            $cat->setBreed($breed);
+        }
+        if ($catInput->owner !== null) {
+            $owner = $this->ownerRepository->find($catInput->owner);
+            if (!$owner) {
+                throw new \DomainException('Owner not found');
+            }
+            $cat->setOwner($owner);
+        }
+
+        $this->entityManager->flush();
+
+        return $cat;
+    }
+
+    public function findBreedById(int $id): ?Breed
+    {
+        return $this->breedRepository->find($id);
+    }  
+
+    public function findOwnerById(int $id): ?Owner
+    {
+        return $this->ownerRepository->find($id);
     }
 }

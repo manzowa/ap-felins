@@ -40,4 +40,13 @@ class CatRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findAllWithRelations(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.breed', 'b')->addSelect('b')
+            ->leftJoin('c.owner', 'o')->addSelect('o')
+            ->getQuery()
+            ->getResult();
+    }
 }
